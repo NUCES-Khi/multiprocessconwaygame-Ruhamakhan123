@@ -1,22 +1,101 @@
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-718a45dd9cf7e7f842a935f5ebbe5719a5e09af4491e668f4dbf3b35d5cca122.svg)](https://classroom.github.com/online_ide?assignment_repo_id=10782250&assignment_repo_type=AssignmentRepo)
+
 # Assign 02 - Multiprocess Conway Game
-|Name|Id|
-|-|-|
-|Add your name here|kYY-xxxx|
+|Ruhama umer |k21-3097|
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+#define ROWS 10
+#define COLS 10
+
+void initialize_grid(int grid[ROWS][COLS]) {
+    for(int row=0; row<ROWS; row++) {
+        for(int col=0; col<COLS; col++) {
+            grid[row][col] = rand() % 2;
+        }
+    }
+}
+
+void print_grid(int grid[ROWS][COLS]) {
+    printf("\033[2J"); // clear the screen
+    printf("\033[%d;%dH", 0, 0); // move cursor to (0, 0)
+    for(int row=0; row<ROWS; row++) {
+        for(int col=0; col<COLS; col++) {
+            if(grid[row][col] == 1) {
+                printf("# ");
+            } else {
+                printf(". ");
+            }
+        }
+        printf("\n");
+    }
+}
+
+int count_neighbors(int grid[ROWS][COLS], int row, int col) {
+    int count = 0;
+    for(int i=row-1; i<=row+1; i++) {
+        for(int j=col-1; j<=col+1; j++) {
+            if(i < 0 || i >= ROWS || j < 0 || j >= COLS) {
+                continue;
+            } else if(i == row && j == col) {
+                continue;
+            } else if(grid[i][j] == 1) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+void update_grid(int grid[ROWS][COLS], int new_grid[ROWS][COLS]) {
+    for(int row=0; row<ROWS; row++) {
+        for(int col=0; col<COLS; col++) {
+            int neighbors = count_neighbors(grid, row, col);
+            if(grid[row][col] == 1 && (neighbors < 2 || neighbors > 3)) {
+                new_grid[row][col] = 0;
+            } else if(grid[row][col] == 0 && neighbors == 3) {
+                new_grid[row][col] = 1;
+            } else {
+                new_grid[row][col] = grid[row][col];
+            }
+        }
+    }
+}
+
+int main() {
+    int grid[ROWS][COLS];
+    int new_grid[ROWS][COLS];
+
+    srand(time(NULL));
+    initialize_grid(grid);
+    initialize_grid(new_grid);
+
+    while(1) {
+        update_grid(grid, new_grid);
+        print_grid(new_grid);
+        int pid = fork();
+        if(pid == 0){
+            for(int row=0; row<ROWS; row++) {
+                for(int col=0; col<COLS; col++) {
+                    grid[row][col] = new_grid[row][col];
+                }
+            }
+            sleep(1);
+            exit(0);
+        }else{
+            for(int row=0; row<ROWS; row++) {
+                for(int col=0; col<COLS; col++) {
+                    new_grid[row][col] = grid[row][col];
+                }
+            }
+            wait(NULL);
+        }
+    }
+    return 0;
+} 
 
 
-## Intro
-A Template for ConwayGame Multiprocess. This report is part of the assignment you are to complete this report. The headings must remain the same. Remove any other text and add your own. 
+![image](https://user-images.githubusercontent.com/105592893/230517788-99d338f8-c2e2-4b00-a709-95847e51dec5.png)
 
-## Approach
-Breifly explain how did you planned to approach the problem
-
-## Problems Faced
-+ use this list to mention the major problems that you faced in completing this assignment.
-+ Please use correct English
-
-## Online / Chat GPT Help
-Mention where you got help for your assignment and if you used chat gpt (not encouraged) mention the questions you gave and the reply you got that you are using in the assignment.
-
-## Screenshots
-![Add screenshots here.]() 
